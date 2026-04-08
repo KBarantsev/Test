@@ -1,0 +1,18 @@
+#датасет WIDER FACE
+#загрузка меток датасета
+!wget http://shuoyang1213.me/WIDERFACE/support/bbx_annotation/wider_face_split.zip
+#загрузка train датасета
+!wget https://huggingface.co/datasets/wider_face/resolve/main/data/WIDER_train.zip
+#загрузка val датасета
+!wget https://huggingface.co/datasets/wider_face/resolve/main/data/WIDER_val.zip
+#загрузка test
+!wget https://huggingface.co/datasets/wider_face/resolve/main/data/WIDER_test.zip
+
+#распаковка меток датасета
+!unzip wider_face_split.zip 
+#распаковка train датасета
+!unzip WIDER_train.zip 
+#распаковка val датасета
+!unzip WIDER_val.zip 
+#распаковка test датасета
+!unzip WIDER_test.zip 
