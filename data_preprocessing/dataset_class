@@ -1,0 +1,70 @@
+#класс нашего датасета
+from torch.utils.data import Dataset, DataLoader
+import torchvision.transforms as T
+
+
+class MyDataset(Dataset):
+  
+    def __init__(self, files, mode):
+        super().__init__()
+        # список файлов для загрузки (DataFrame)
+        self.files = files
+        # режим работы
+        self.mode = mode
+        self.len_ = len(self.files)
+                
+    def __len__(self):
+        return self.len_
+      
+  
+    def __getitem__(self, index):
+
+        string = self.files['filename'][index]
+        way_to_img = f'/content/WIDER_{self.mode}/images/{string}'
+        image_tensor = image_to_tensor(way_to_img)
+        image_tensor = image_tensor/255
+        size=(2000,1024) #единый размер картинок для формирования батчей
+
+        #трансформер для train
+        transform1 = T.Compose([
+          T.CenterCrop(size=size)
+          #T.RandomHorizontalFlip(),
+          #T.RandomPosterize(bits, p=0.5),
+          #T.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.1)
+          #T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),  
+          ])
+        
+        #трансформер для val и test
+        transform2 = T.Compose([
+          T.CenterCrop(size=size)
+          #T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])   
+          ])
+        
+        if self.mode == 'train':
+            image_tensor = transform1(image_tensor)
+        else:
+            image_tensor = transform2(image_tensor)   
+
+        #формирование тензора координат боксов
+        if self.mode !='test':
+            arr = self.files['ann'][index]['bboxes'].copy()
+            boxes = torch.from_numpy(arr)
+            
+            #преобразование координат боксов при приведении картинки к единому размеру (добавка к y координате)
+            h = self.files['height'][index]
+            delta_h=(size[0]-h)/2
+            boxes1 = torch.clone(boxes)
+            boxes1[:,1] = boxes1[:,1]+delta_h
+            #преобразование координат боксов (x1,y1,w,h)->(x1,y1,x2,y2)
+            x2 = boxes1[:,0]+boxes1[:,2]
+            y2 = boxes1[:,1]+boxes1[:,3]
+            boxes2=torch.clone(boxes1)
+            boxes2[:,2]=x2
+            boxes2[:,3]=y2
+
+            size_bboxes = (200,4) #единый размер тензора боксов для формирования батчей
+            boxes3 = T.CenterCrop(size=size_bboxes)(boxes2)
+            return image_tensor, boxes3
+
+        else:
+            return image_tensor
