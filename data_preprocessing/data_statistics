@@ -1,0 +1,29 @@
+data_train_pd['height'].describe()
+
+
+data_val_pd['height'].describe()
+
+
+data_test_pd['height'].describe()
+
+
+from matplotlib import pyplot as plt
+data_train_pd['height'].hist(figsize=(10,5),rwidth=0.5,grid=False,bins=50)
+plt.xticks(rotation=90)
+plt.title('Распределение высот картинок train')
+plt.show()
+
+
+from matplotlib import pyplot as plt
+data_val_pd['height'].hist(figsize=(10,5),rwidth=0.5,grid=False,bins=50)
+plt.xticks(rotation=90)
+plt.title('Распределение высот картинок val')
+plt.show()
+
+
+from matplotlib import pyplot as plt
+data_test_pd['height'].hist(figsize=(10,5),rwidth=0.5,grid=False,bins=50)
+plt.xticks(rotation=90)
+plt.title('Распределение высот картинок test')
+plt.show()
+
