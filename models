@@ -1,0 +1,17 @@
+import torch, torchvision
+
+#Выберем фреймворк torchvision.models.detection
+#Загрузим одну из моделей, тренированых на COCO датасете
+
+#FasterRCNN
+model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True, progress=True, pretrained_backbone=True)
+
+#SSD
+model = torchvision.models.detection.ssd300_vgg16(pretrained= True, pretrained_backbone=True)
+
+#RetinaNet
+model = torchvision.models.detection.retinanet_resnet50_fpn(pretrained=True, progress=True, pretrained_backbone=True)
+
+#загрузим модель на графический процессор (если доступен)
+device=torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+model=model.to(device)
