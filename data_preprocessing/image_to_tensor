@@ -1,0 +1,9 @@
+#функция, которая по названию файла возвращает torch тензор нужной размерности
+import cv2
+def image_to_tensor(uri):
+    img=cv2.imread(uri)[:,:,::-1]
+    img=img.copy()
+    img=torch.from_numpy(img)
+    img = torch.permute(img, (2, 0, 1))
+    #img=img[None,:,:,:]
+    return img
