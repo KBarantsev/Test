@@ -1,0 +1,195 @@
+import torch, torchvision
+
+#функция, которая преобразует батч боксов (тензор) в список словарей для подачи на вход модели. 
+#Из тензора удаляются нулевые строки и боксы, не удовлетворяющие x2>x1 и y2>y1.
+def prepare_labels(labels,batch_size):
+    label_list = []
+    for j in range(batch_size):
+        x = labels[j][labels[j].sum(1)!=0]
+        delta_x = (x[:,2]-x[:,0])>0.
+        delta_y = (x[:,3]-x[:,1])>0.
+        delta_xy = delta_x*delta_y
+        x = x[delta_xy]
+        label_dict = {'boxes': x.to(torch.float), 
+                      'labels': (torch.IntTensor(len(x)).zero_().to(torch.int64)+1).to(device)}
+        label_list.append(label_dict)
+
+    return label_list
+
+import cv2
+def image_to_tensor(uri):
+    img=cv2.imread(uri)[:,:,::-1]
+    img=img.copy()
+    img=torch.from_numpy(img)
+    img = torch.permute(img, (2, 0, 1))
+    #img=img[None,:,:,:]
+    return img
+
+#функция вычисления метрик Precision, Recall, F1 для одной картинки
+def metrics(boxes_Gr, boxes_Pr,tr):
+    if (len(boxes_Pr)!=0)&(len(boxes_Gr)!=0):
+        IoU_tensor = torchvision.ops.box_iou(boxes_Gr, boxes_Pr) #матрица IoU между предсказаными и truth боксами
+        IoU_tensor = IoU_tensor.cpu()
+        TP = (IoU_tensor>tr).sum().item() #число true positive боксов по порогу tr
+        if TP != 0.:
+            FP = ((IoU_tensor>tr).sum(0) == 0).sum().item() #число false positive боксов
+            FN = ((IoU_tensor>tr).sum(1) == 0).sum().item() #число false negative боксов
+            Recall = np.float16(TP/(TP+FN))
+            Precision = np.float16(TP/(TP+FP))
+            F1 = np.float16(2*(Precision*Recall)/(Precision + Recall))
+            return Precision, Recall, F1
+        else:
+            return 0,0,0   
+    else:
+        return 0,0,0
+
+torch.cuda.empty_cache()
+
+
+
+
+#основной цикл обучения
+from tqdm import tqdm
+import torch.optim as optim
+import numpy as np
+from IPython.display import clear_output
+
+tr = 0.5 #порог IoU для критерия true positive
+treshold = 0.3 #порог уверенности бокса для постобработки
+optimizer = torch.optim.Adam(model.parameters(),)
+
+
+#loss_list = []
+#Precision_list_train = []
+#Recall_list_train = []
+#F1_list_train = []
+
+#Precision_list_val = []
+#Recall_list_val = []
+#F1_list_val = []
+i=1
+#цикл одной эпохи
+for inputs in tqdm(train_loader):
+    #загрузка батчей картинок и меток
+    inputs = list(inp.to(device) for inp in inputs) 
+    batch_size = len(inputs[0])
+    images = inputs[0]
+    labels = prepare_labels(inputs[1],batch_size)
+
+    #обучение модели
+    optimizer.zero_grad()
+
+    model.train()
+
+    loss_dict = model(images,labels) #модель в режиме train возвращает словарь loss'ов регрессии и классификации
+    losses = sum(loss for loss in loss_dict.values()) #в качестве лосса для градиентного спуска выберем сумму лоссов
+
+    losses.backward()
+    optimizer.step()
+    #scheduler.step()
+
+    losses = losses.cpu()
+    losses = losses.detach().item()
+
+    loss_list.append(np.float16(losses))
+
+    #контрольная точка каждые 10 батчей: вычисление метрик на текущем батче train и случайном батче val
+    if i % 10 == 0:
+
+        model.eval()
+        #предсказание на текущем батче train
+        with torch.no_grad():
+            detections = model(images)
+
+
+        Precision_batch = []
+        Recall_batch = []
+        F1_batch = []
+
+        for j in range(batch_size):#цикл вычисления метрик по картинкам в батче
+            boxes_Pr = detections[j]['boxes']
+            boxes_Gr = labels[j]['boxes']
+            Precision, Recall, F1 = metrics(boxes_Gr, boxes_Pr, tr)
+
+            Precision_batch.append(Precision)
+            Recall_batch.append(Recall)
+            F1_batch.append(F1)
+
+        Precision_list_train.append(np.float16(np.mean(Precision_batch)))
+        Recall_list_train.append(np.float16(np.mean(Recall_batch)))
+        F1_list_train.append(np.float16(np.mean(F1_batch))) 
+        
+
+        #предсказание на случайном val батче
+        inputs = next(iter(val_loader))
+        batch_size = len(inputs[0])
+        inputs = list(inp.to(device) for inp in inputs)
+        images = inputs[0]
+        labels = prepare_labels(inputs[1],batch_size) 
+        with torch.no_grad():
+            detections = model(images)    
+
+        Precision_batch = []
+        Recall_batch = []
+        F1_batch = []
+
+        for j in range(batch_size):#цикл вычисления метрик по картинкам в val батче, постобработка
+            #отсечение по уверенности боксов
+            detections[j]['boxes'] = detections[j]['boxes'][detections[j]['scores'] > treshold]
+            detections[j]['labels'] = detections[j]['labels'][detections[j]['scores'] > treshold]
+            detections[j]['scores'] = detections[j]['scores'][detections[j]['scores'] > treshold] 
+
+            #non max supression (отсечение пересекающихся боксов)
+
+            #nms_indexes = torchvision.ops.nms(detections[j]['boxes'], detections[j]['scores'], iou_threshold=0.2)
+
+            #detections[j]['boxes'] = detections[j]['boxes'][nms_indexes]
+            #detections[j]['labels'] = detections[j]['labels'][nms_indexes]
+            #detections[j]['scores'] = detections[j]['scores'][nms_indexes]
+
+
+            boxes_Pr = detections[j]['boxes']
+            boxes_Gr = labels[j]['boxes']
+            Precision, Recall, F1 = metrics(boxes_Gr, boxes_Pr, tr)
+
+            Precision_batch.append(Precision)
+            Recall_batch.append(Recall)
+            F1_batch.append(F1)
+
+        Precision_list_val.append(np.float16(np.mean(Precision_batch)))
+        Recall_list_val.append(np.float16(np.mean(Recall_batch)))
+        F1_list_val.append(np.float16(np.mean(F1_batch)))    
+        clear_output(wait=True)
+        print('Train:',' Loss=',losses,' Precision=',Precision_list_train[-1], ' Recall=',Recall_list_train[-1],' F1=',F1_list_train[-1])
+        print('Val:',' Precision=',Precision_list_val[-1], ' Recall=',Recall_list_val[-1],' F1=',F1_list_val[-1])
+        
+
+    i=i+1
+
+
+
+
+
+#сохранение весов модели
+best_model_wts = model.state_dict()
+torch.save(best_model_wts,'RetinaNet.pth')
+
+
+#загрузка весов модели
+weights = torch.load('RetinaNet.pth', map_location=torch.device('cpu'))
+model.load_state_dict(weights)
+
+
+
+#сохранение графиков
+torch.save(Precision_list_train,'Precision_list_train_(RN,4,(5,6),7,03).pth')
+torch.save(Precision_list_val,'Precision_list_val_(RN,4,(5,6),7,03).pth')
+torch.save(Recall_list_train,'Recall_list_train_(RN,4,(5,6),7,03).pth')
+torch.save(Recall_list_val,'Recall_list_val_(RN,4,(5,6),7,03).pth')
+torch.save(F1_list_train,'F1_list_train_(RN,4,(5,6),7,03).pth')
+torch.save(F1_list_val,'F1_list_val_(RN,4,(5,6),7,03).pth')
+#unfrease = 2, lr=(ep1:1e-5,ep2:1e-6), batch_size=7, treshold=0.3, ColorJitter = (2,(5,6),7,03,ColorJitter)
+
+
+
+Precision_list_val = torch.load('Precision_list_val_(RN,2,(5,6),7,03).pth')
