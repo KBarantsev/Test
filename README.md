@@ -8,3 +8,5 @@ Backbone модели выбран обученным на Image Net. Голов
 
 
 ![RetinaNet_1](results_vizualization/RetinaNet_1.png)
+![RetinaNet_2](results_vizualization/RetinaNet_2.png)
+![RetinaNet_3](results_vizualization/RetinaNet_3.png)
