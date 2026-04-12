@@ -10,7 +10,7 @@ Backbone модели выбран обученным на Image Net. Голов
 
 <img src="results_vizualization/RetinaNet_1.png" width="500">
 <img src="results_vizualization/RetinaNet_2.png" width="500">
-<img src="results_vizualization/RetinaNet_3.png" width="500">
+<img src="results_vizualization/RetinaNet_3.png" width="700">
 
 Рис.1 Демонстрация работы обученной RetinaNet.
 
