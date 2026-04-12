@@ -73,7 +73,7 @@ Backbone модели выбран обученным на Image Net. Голов
 ## Сравнение FasterRCNN и RetinaNet
 
 
-<img src="results_vizualization/FasterRCNN_2.png" width="400">  <img src="results_vizualization/RetinaNet_2.png" width="400">
+<img src="results_vizualization/FasterRCNN_2.png" width="500">  <img src="results_vizualization/RetinaNet_2.png" width="500">
 
 
 
