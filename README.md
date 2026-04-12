@@ -17,4 +17,4 @@ Backbone модели выбран обученным на Image Net. Голов
 
 ![Fig1](training_graphics/Fig1.png)
 ![Fig2](training_graphics/Рис.2.png)
-
+<img src="training_graphics/Рис.2.png" width="500">
