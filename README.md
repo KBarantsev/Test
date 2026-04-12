@@ -16,5 +16,5 @@ Backbone модели выбран обученным на Image Net. Голов
 ## Процесс обучения
 
 ![Fig1](training_graphics/Fig1.png)
-
+![Fig2](training_graphics/Рис.2.png)
 
