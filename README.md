@@ -71,9 +71,13 @@ Backbone модели выбран обученным на Image Net. Голов
 Все эти ошибки можно корректировать изменением порога фильтрации уверенности боксов.
 
 ## Сравнение FasterRCNN и RetinaNet
-
+Сравним работу этих сетей, обученых с параметрами, обеспечивающими максимальную Average precision. При постобработке остается свободный параметр treshold - порог уверенности боксов. Боксы с меньшей увереноостью отсекаются.
 
 <img src="results_vizualization/FasterRCNN_2.png" width="500">  <img src="results_vizualization/RetinaNet_2.png" width="500">
+
+Рис.9 Работа FasterRCNN (treshold=0.4) и RetinaNet (treshold=0.3).
+
+
 
 
 
