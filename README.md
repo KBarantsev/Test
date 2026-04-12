@@ -7,9 +7,10 @@ Backbone модели выбран обученным на Image Net. Голов
 При обучении контролировались метрики Precision, Recall, F1 и для итоговой оценки качества модели Average precision. Использование RetinaNet c двумя тренируемыми слоями backbone показало наилучший результат Average precision=0.7393.
 
 
-![RetinaNet_1](results_vizualization/RetinaNet_1.png)
-![RetinaNet_2](results_vizualization/RetinaNet_2.png)
-![RetinaNet_3](results_vizualization/RetinaNet_3.png)
+
+<img src="results_vizualization/RetinaNet_1.png" width="500">
+<img src="results_vizualization/RetinaNet_2.png" width="500">
+<img src="results_vizualization/RetinaNet_3.png" width="500">
 
 Рис.1 Демонстрация работы обученной RetinaNet.
 
