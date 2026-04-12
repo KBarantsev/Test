@@ -71,7 +71,7 @@ Backbone модели выбран обученным на Image Net. Голов
 Все эти ошибки можно корректировать изменением порога фильтрации уверенности боксов.
 
 
-<img src="training_graphics/Рис.8.png" width="800">  <img src="training_graphics/Рис.7.png" width="800">
+<img src="training_graphics/Рис.8.png" width="400">  <img src="training_graphics/Рис.7.png" width="400">
 
 
 
